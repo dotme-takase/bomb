@@ -1,8 +1,8 @@
 if (typeof exports == "undefined") {
     exports = {
-        error:function (sMessage) {
+        error: function (sMessage) {
         },
-        inspect:function (o) {
+        inspect: function (o) {
         }
     };
 }
@@ -40,20 +40,20 @@ function guid(delim) {
 
 //Constants
 var EnemyMode = exports.EnemyMode = {
-    RANDOM_WALK:1,
-    ATTACK_TO_TARGET:2,
-    BYPASS_LEFT_TO_TARGET:3,
-    BYPASS_RIGHT_TO_TARGET:4
+    RANDOM_WALK: 1,
+    ATTACK_TO_TARGET: 2,
+    BYPASS_LEFT_TO_TARGET: 3,
+    BYPASS_RIGHT_TO_TARGET: 4
 };
 
 var CharacterAction = exports.CharacterAction = {
-    NONE:0,
-    DEFENCE_MOTION:1,
-    DEFENCE:2,
-    ATTACK:3,
-    PARRIED:4,
-    DAMAGE:5,
-    DEAD:6
+    NONE: 0,
+    DEFENCE_MOTION: 1,
+    DEFENCE: 2,
+    ATTACK: 3,
+    PARRIED: 4,
+    DAMAGE: 5,
+    DEAD: 6
 };
 var __maxDiffClientTime = 20;
 var __maxEffectSize = 20;
@@ -65,12 +65,12 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
     _this.tileSize = __tileSize;
     _this.currentHostId = -1;
 
-    if(contextView){
+    if (contextView) {
         _this.view = contextView;
-           _this.view.removeAllChildren();
+        _this.view.removeAllChildren();
     }
 
-    if(contextViewUI){
+    if (contextViewUI) {
         _this.viewUI = contextViewUI;
         _this.viewUI.removeAllChildren();
     }
@@ -87,6 +87,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
     _this.characterTree = null;
     _this.items = {};
     _this.dropItems = [];
+    _this.activeItems = [];
     _this.itemMaster = {};
     _this.blocks = [];
     //_this.blockTree = null;
@@ -103,7 +104,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
     } catch (ignore) {
     }
 
-    if(typeof createjs !== 'undefined'){
+    if (typeof createjs !== 'undefined') {
         _this.scoreField = new createjs.Text("", "bold 12px Arial", "#FFFFFF");
         _this.scoreField.textAlign = "right";
         _this.scoreField.y = 4;
@@ -116,10 +117,10 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         _this.playData = playData;
     } else {
         _this.playData = {
-            id:null,
-            floorNumber:1,
-            rightArm:"shortSword",
-            leftArm:"woodenShield"
+            id: null,
+            floorNumber: 1,
+            rightArm: "grenade",
+            leftArm: "woodenShield"
         };
     }
 
@@ -193,7 +194,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
             for (var j = 0; j < _this.blockMap[0].length; j++) {
                 var block = _this.blockMap[i][j];
                 if (block == null) {
-                    arr.push({x:(j + 0.5) * _this.tileSize, y:(i + 0.5) * _this.tileSize});
+                    arr.push({x: (j + 0.5) * _this.tileSize, y: (i + 0.5) * _this.tileSize});
                 }
             }
         }
@@ -211,7 +212,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
             for (var j = 0; j < _this.blockMap[0].length; j++) {
                 var block = _this.blockMap[i][j];
                 if (block == null) {
-                    arr.push({x:j, y:i});
+                    arr.push({x: j, y: i});
                 }
             }
         }
@@ -221,10 +222,10 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
     _this.loadBlockMap = function (blockMap) {
         _this.blockMap = blockMap;
         _this.mapBounds = {
-            x:0,
-            y:0,
-            width:_this.tileSize * _this.blockMap[0].length,
-            height:_this.tileSize * _this.blockMap.length
+            x: 0,
+            y: 0,
+            width: _this.tileSize * _this.blockMap[0].length,
+            height: _this.tileSize * _this.blockMap.length
         };
         _this.characterTree = new QuadTree(_this.mapBounds, false);
         _this.mapChips = null;
@@ -303,8 +304,8 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
 
     _this.getMapPoint = function (obj) {
         return {
-            x:Math.floor(obj.x / _this.tileSize),
-            y:Math.floor(obj.y / _this.tileSize)
+            x: Math.floor(obj.x / _this.tileSize),
+            y: Math.floor(obj.y / _this.tileSize)
         }
     };
 
@@ -330,8 +331,8 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
                     && (typeof _this.blockMap[_y][_x] != "undefined")
                     && (_this.blockMap[_y][_x] != null)) {
                     nearBlocks.push({
-                        x:_x * _this.tileSize,
-                        y:_y * _this.tileSize
+                        x: _x * _this.tileSize,
+                        y: _y * _this.tileSize
                     });
                 }
             }
@@ -403,6 +404,169 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         obj.py = obj.y;
     };
 
+
+    _this.updateActiveItems = function () {
+        var tempItems = new Array();
+        for (var k in _this.activeItems) {
+            var obj = _this.activeItems[k];
+            if (obj.alpha > 0) {
+                if (typeof obj.step == "undefined") {
+                    obj.step = 0;
+                }
+                tempItems.push(obj);
+            }
+        }
+        _this.activeItems = tempItems;
+
+        var hitRange = 16;
+        for (var k in _this.activeItems) {
+            var obj = _this.activeItems[k];
+            obj.px = obj.x;
+            obj.py = obj.y;
+            var isTouched = false;
+            if (obj.range > 0) {
+                obj.x += obj.vX;
+                obj.y += obj.vY;
+                var step = Math.sqrt(Math.pow(obj.vX, 2) + Math.pow(obj.vY, 2));
+                obj.step += step;
+                if (obj.type == BitmapItem.TYPE_BOMB || obj.type == BitmapItem.TYPE_BOMB_REMOTE) {
+                    obj.range -= step;
+                    //obj.rotate(10);
+                }
+            } else {
+                obj.range = obj.vX = obj.vY = 0;
+                continue;
+            }
+
+            //ToDo character.width
+            if (obj.step > 64) {
+                for (var k in  _this.characters) {
+                    var other = _this.characters[k];
+                    var deltaX = other.x - obj.x;
+                    var deltaY = other.y - obj.y;
+                    var range = (other.width / 2);
+                    var distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+                    if (distance <= range) {
+                        var theta = Math.atan2(deltaY, deltaX);
+                        if (theta > Math.PI) {
+                            theta -= Math.PI;
+                        } else {
+                            theta += Math.PI;
+                        }
+                        obj.vX = obj.speed * Math.cos(theta);
+                        obj.vY = obj.speed * Math.sin(theta);
+                        isTouched = true;
+                    }
+                }
+            }
+
+            var mapPoint = _this.getMapPoint(obj);
+            var nearBlocks = [];
+            for (var _y = mapPoint.y - 2; _y < mapPoint.y + 3; _y++) {
+                for (var _x = mapPoint.x - 2; _x < mapPoint.x + 3; _x++) {
+                    if ((typeof _this.blockMap[_y] != "undefined")
+                        && (typeof _this.blockMap[_y][_x] != "undefined")
+                        && (_this.blockMap[_y][_x] != null)) {
+                        nearBlocks.push({
+                            x: _x * _this.tileSize,
+                            y: _y * _this.tileSize
+                        });
+                    }
+                }
+            }
+            var len = nearBlocks.length;
+            for (var i = 0; i < len; i++) {
+                var block = nearBlocks[i];
+                if (obj.y > block.y
+                    && obj.y < block.y + _this.tileSize
+                    && obj.px >= block.x + _this.tileSize + hitRange / 2
+                    && obj.x < block.x + _this.tileSize + hitRange / 2) {
+                    obj.vX = obj.vX * -1;
+                    isTouched = true;
+                }
+
+                if (obj.y > block.y
+                    && obj.y < block.y + _this.tileSize
+                    && obj.x > block.x - hitRange / 2
+                    && obj.px <= block.x - hitRange / 2) {
+                    obj.vX = obj.vX * -1;
+                    isTouched = true;
+                }
+
+                if (obj.py >= block.y + _this.tileSize + hitRange / 2
+                    && obj.y < block.y + _this.tileSize + hitRange / 2
+                    && obj.x > block.x
+                    && obj.x < block.x + _this.tileSize) {
+                    obj.vY = obj.vY * -1;
+                    isTouched = true;
+                }
+
+                if (obj.y > block.y - hitRange / 2
+                    && obj.py <= block.y - hitRange / 2
+                    && obj.x > block.x
+                    && obj.x < block.x + _this.tileSize) {
+                    obj.vY = obj.vY * -1;
+                    isTouched = true;
+                }
+            }
+
+            if (isTouched || obj.range <= 0) {
+                if (obj.type == BitmapItem.TYPE_BULLET || obj.type == BitmapItem.TYPE_BOMB) {
+                    if (obj.type == BitmapItem.TYPE_BOMB) {
+                        if(isTouched){
+                            obj.x += obj.vX;
+                            obj.y += obj.vY;
+                        }
+
+                        var damagedStateId = new Array();
+                        var range2d = obj.range2d.split('x');
+                        if (range2d.length == 2) {
+                            var bStep1 = _this.tileSize / 4;
+                            for (var b2 = 0; b2 < range2d[1]; b2++) {
+                                for (var b1 = 0; b1 < range2d[0]; b1 += bStep1) {
+                                    var bAngle = ((Math.PI * 2 * b2) / range2d[1]);
+                                    var bX = b1 * Math.cos(bAngle) + obj.x;
+                                    var bY = b1 * Math.sin(bAngle) + obj.y;
+                                    var mapPoint = _this.getMapPoint({x: bX, y: bY});
+                                    var block = _this.blockMap[mapPoint.y][mapPoint.x];
+                                    if ((block == null)
+                                        || (block.substring(0, 1) != "w")) {
+                                        _this.addEffect(bX, bY, "smoke");
+                                        _this.addEffect(bX, bY, "bomb");
+                                        for (var k in  _this.characters) {
+                                            var other = _this.characters[k];
+                                            if (damagedStateId.indexOf(other.stateId) < 0) {
+                                                var deltaX = other.x - bX;
+                                                var deltaY = other.y - bY;
+                                                var range = (other.width);
+                                                var distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+                                                if (distance <= range) {
+                                                    var theta = Math.atan2((other.y - obj.y), (other.x - obj.x));
+                                                    if (!other.isAction || (other.action != CharacterAction.DAMAGE)) {
+                                                        var kickBackRange = -1 * Math.random() * other.width / 4;
+                                                        other.vX -= Math.cos(theta) * kickBackRange;
+                                                        other.vY -= Math.sin(theta) * kickBackRange;
+                                                        other.isAction = true;
+                                                        other.action = CharacterAction.DAMAGE;
+                                                        other.HP -= Math.ceil(obj.bonusPoint * (Math.random() * 0.20 + 1));
+                                                        //todo update player's enemy
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    obj.alpha = 0;
+                }
+            }
+        }
+    };
+
     _this.collideCharactersOnServer = function (character) {
         _this.updateTree();
         _this.collideCharacters(character);
@@ -442,7 +606,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
                     }
                 }
                 if (floor) {
-                    _this.characterPreviousPoints[character.stateId] = {'x':character.x, 'y':character.y};
+                    _this.characterPreviousPoints[character.stateId] = {'x': character.x, 'y': character.y};
                 }
             }
         }
@@ -573,8 +737,8 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
             g2.drawRect(0, 0, 6, 6);
 
             _this.mapChips = {
-                background:new createjs.Shape(drawAutoMap()),
-                player:new createjs.Shape(g2)
+                background: new createjs.Shape(drawAutoMap()),
+                player: new createjs.Shape(g2)
             }
             _this.mapChips.background.cache(0, 0, 300, 300);
             _this.mapChips.player.cache(0, 0, 6, 6);
@@ -596,11 +760,11 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
 };
 
 var AppUtils = exports.AppUtils = {
-    updatePosition:function (character) {
+    updatePosition: function (character) {
         character.x += character.vX;
         character.y += character.vY;
     },
-    pathToTarget:function (character, target, context) {
+    pathToTarget: function (character, target, context) {
         var SEARCH_LEVEL = 3;
         var trail = [];
 
@@ -840,7 +1004,7 @@ var AppUtils = exports.AppUtils = {
         startNode.setNext(goalNode);
         searchRoute(startNode, 1);
     },
-    pathToRandom:function (character, context) {
+    pathToRandom: function (character, context) {
         var result = [];
         var vectors = [
             [1, 0],
@@ -870,14 +1034,14 @@ var AppUtils = exports.AppUtils = {
                     || (context.floorMap[y][x] == null)) {
                     continue;
                 }
-                result.push({x:x, y:y});
+                result.push({x: x, y: y});
                 _vectors = restart(_vectors, i);
                 break;
             }
         }
         return result;
     },
-    pathToTargetByAStar:function (character, target, context, maxDepth) {
+    pathToTargetByAStar: function (character, target, context, maxDepth) {
         var depth = 0;
         if (!target) {
             for (var k in context.characters) {
@@ -896,7 +1060,7 @@ var AppUtils = exports.AppUtils = {
             var _this = this;
             if ((typeof x != "undefined")
                 && (typeof y != "undefined")) {
-                _this.pos = {x:x, y:y};
+                _this.pos = {x: x, y: y};
             } else {
                 _this.pos = context.getMapPoint(character);
             }
@@ -1062,7 +1226,7 @@ var AppUtils = exports.AppUtils = {
             var n = endNode;
             var count = 0;
             while ((n != null) && (n.parentNode != null)) {
-                list.unshift({x:n.pos.x, y:n.pos.y});
+                list.unshift({x: n.pos.x, y: n.pos.y});
                 n = n.parentNode;
             }
         }
@@ -1072,7 +1236,7 @@ var AppUtils = exports.AppUtils = {
         }
         return list;
     },
-    simpleAction:function (character, context) {
+    simpleAction: function (character, context) {
         function searchTarget() {
             var tempTarget = null;
             var tempDistance = 0;
@@ -1130,7 +1294,7 @@ var AppUtils = exports.AppUtils = {
                     if (character.target) {
                         target = character.target;
                     } else {
-                        target = {x:0, y:0};
+                        target = {x: 0, y: 0};
                         target = context.warpToRandom(target);
                     }
                     if (context.heavyTasks.length < 2) {
@@ -1172,8 +1336,8 @@ var AppUtils = exports.AppUtils = {
                             character.nextToTarget = character.path.shift();
                         }
                         if (character.nextToTarget) {
-                            var nextPoint = {x:(character.nextToTarget.x + 0.5) * context.tileSize,
-                                y:(character.nextToTarget.y + 0.5) * context.tileSize};
+                            var nextPoint = {x: (character.nextToTarget.x + 0.5) * context.tileSize,
+                                y: (character.nextToTarget.y + 0.5) * context.tileSize};
                             var _deltaX = nextPoint.x - character.x;
                             var _deltaY = nextPoint.y - character.y;
                             var _theta = Math.atan2(_deltaY, _deltaX);
@@ -1203,6 +1367,7 @@ var AppUtils = exports.AppUtils = {
                             || (character.action == CharacterAction.DEFENCE_MOTION)) {
                             if (character.aiWait <= 0) {
                                 character.action = CharacterAction.ATTACK;
+                                character.prepareThrowWeapon(character.target);
                             }
                         }
                     }
@@ -1216,7 +1381,7 @@ var AppUtils = exports.AppUtils = {
             }
         }
     },
-    inputAction:function (character, context) {
+    inputAction: function (character, context) {
         var _this = character;
         if (typeof _this.defenceCount == "undefined") {
             _this.defenceCount = -1;
@@ -1254,12 +1419,18 @@ var AppUtils = exports.AppUtils = {
                 }
 
                 if (_this.isAction) {
+                    var axisTarget = {
+                        x: _this.axisX + _this.x,
+                        y: _this.axisY + _this.y
+                    }
                     if (_this.action == CharacterAction.ATTACK) {
                     } else if ((_this.action == CharacterAction.DEFENCE)
                         && (_this.defenceCount > 0)) {
                         _this.action = CharacterAction.ATTACK;
+                        _this.prepareThrowWeapon(axisTarget);
                     } else if (_this.action == CharacterAction.DEFENCE_MOTION) {
                         _this.action = CharacterAction.ATTACK;
+                        _this.prepareThrowWeapon(axisTarget);
                     } else {
                         _this.isAction = false;
                         _this.action = CharacterAction.NONE;
@@ -1269,14 +1440,13 @@ var AppUtils = exports.AppUtils = {
                 }
             }
         }
-        _this.isMouseClick = false;
     },
-    filledArray:function (v, length) {
+    filledArray: function (v, length) {
         var array = [];
         for (var i = 0; i < length; array[i++] = v);
         return array;
     },
-    fixAngle:function (angle) {
+    fixAngle: function (angle) {
         angle = angle % 360;
         if (angle > 180) {
             angle -= 360;
@@ -1285,7 +1455,7 @@ var AppUtils = exports.AppUtils = {
         }
         return angle;
     },
-    formatDate:function (date, format) {
+    formatDate: function (date, format) {
         function comPadZero(value, length) {
             return new Array(length - ('' + value).length + 1).join('0') + value;
         }
@@ -1345,7 +1515,7 @@ var AppUtils = exports.AppUtils = {
         }
         return result;
     },
-    uuid:function () {
+    uuid: function () {
         function S4() {
             return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
         }
@@ -1380,7 +1550,7 @@ exports.createStateJson = function (stateId) {
 };
 
 var LocalData = {
-    put:function (name, value) {
+    put: function (name, value) {
         if ((typeof AppMobi != "undefined")
             && (typeof AppMobi.cache != "undefined")) {
             AppMobi.cache.setCookie(name, JSON.stringify(value), -1);
@@ -1390,7 +1560,7 @@ var LocalData = {
             $.cookie(name, JSON.stringify(value));
         }
     },
-    get:function (name, defaultValue) {
+    get: function (name, defaultValue) {
         var value = null;
         if ((typeof AppMobi != "undefined")
             && (typeof AppMobi.cache != "undefined")) {
@@ -1413,9 +1583,9 @@ var LocalData = {
 };
 
 var LocalRanking = {
-    dataKey:"localRanking",
-    maxRank:20,
-    insert:function (point, record) {
+    dataKey: "localRanking",
+    maxRank: 20,
+    insert: function (point, record) {
         var data = LocalRanking.load();
         if (data == null) {
             data = new Array();
@@ -1445,7 +1615,7 @@ var LocalRanking = {
         }
         return null;
     },
-    load:function () {
+    load: function () {
         return LocalData.get(LocalRanking.dataKey, null);
     }
 };

@@ -13,6 +13,11 @@
     BitmapItem.TYPE_SHIELD = "shield";
     BitmapItem.TYPE_MISC = "misc";
 
+    BitmapItem.TYPE_BULLET = "bullet";
+    BitmapItem.TYPE_BOMB = "bomb";
+    BitmapItem.TYPE_BOMB_REMOTE = "bombRemote";
+
+
     var p = BitmapItem.prototype = new createjs.BitmapAnimation();
 
     p.BitmapAnimation_initialize = p.initialize;
@@ -23,6 +28,8 @@
         var context = character.context;
         switch (_this.type) {
             case BitmapItem.TYPE_SWORD:
+            case BitmapItem.TYPE_BOMB:
+            case BitmapItem.TYPE_BOMB_REMOTE:
                 context.playSound("pickup");
                 character.equipRight(_this);
                 break;
@@ -74,6 +81,11 @@
         }
     };
 
+    p.isThrowWeapon = function () {
+        var _this = this;
+        return (_this.type == BitmapItem.TYPE_BOMB || _this.type == BitmapItem.TYPE_BOMB_REMOTE);
+    };
+
     p.clone = function () {
         var _this = this;
         var _clone = _this.BitmapAnimation_clone();
@@ -81,11 +93,15 @@
         _clone.HP = _this.HP;
         _clone.bonusPoint = _this.bonusPoint;
         _clone.range = _this.range;
+        _clone.range2d = _this.range2d;
         _clone.speed = _this.speed;
+        _clone.vX = _this.vX;
+        _clone.vY = _this.vY;
         _clone.type = _this.type;
         _clone.onPick = _this.onPick;
         _clone.drop = _this.drop;
         _clone.onUse = _this.onUse;
+        _clone.isThrowWeapon = _this.isThrowWeapon;
         _clone.clone = _this.clone;
         return _clone;
     };
@@ -100,9 +116,11 @@
         this.HP = 0;
         this.bonusPoint = 0;
         this.range = 0;
+        this.vX = 0;
+        this.vY = 0;
+        this.range2d = "0x0"; //radius x angle
         this.speed = 0;
         this.type = null;
     };
-
     window.BitmapItem = BitmapItem;
 }(window));

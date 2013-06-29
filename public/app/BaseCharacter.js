@@ -99,15 +99,15 @@ BaseCharacter.HANDMAP_2X = [
 
 
 BaseCharacter.BODY_ANIMATION = {
-    walk:[0, 7],
-    attack:[10, 15],
-    attack_1:[11, 15],
-    attack_2:[12, 15],
-    attack__1:[9, 15],
-    attack__2:[8, 15],
-    defence:[8, 10],
-    damage:[0, 1],
-    parried:[0, 7]
+    walk: [0, 7],
+    attack: [10, 15],
+    attack_1: [11, 15],
+    attack_2: [12, 15],
+    attack__1: [9, 15],
+    attack__2: [8, 15],
+    defence: [8, 10],
+    damage: [0, 1],
+    parried: [0, 7]
 };
 
 p.stateToJson = function () {
@@ -267,8 +267,8 @@ p.ejectRight = function () {
 p.addToDropList = function (item, rate) {
     var _this = this;
     _this.dropList.push({
-        item:item,
-        rate:rate
+        item: item,
+        rate: rate
     });
 };
 
@@ -371,36 +371,44 @@ p.updateFrame = function () {
             var size = _this.width / 4;
             var half = size / 2;
             for (var i = 0; i < 4; i++) {
-                _this.context.addEffect(_this.x + Math.random() * size - half, _this.y + Math.random() * size - half, "dead");
+                _this.context.addEffect(_this.x + Math.random() * size - half, _this.y + Math.random() * size - half, "smoke");
             }
-            _this.context.playSound("defeat");
+            _this.context.playSound("bomb");
             _this.context.removeFromStage(_this);
         } else if (_this.action == CharacterAction.ATTACK) {
             _this.attackFrame = _this.bodyAnim.currentAnimationFrame;
             if ((_this.bodyAnim.currentAnimation == null)
                 || (_this.bodyAnim.currentAnimation.indexOf("attack") != 0)) {
-                var weaponSpeed = 2;
-                if (_this.rightArm) {
-                    if (_this.bodyAnim.currentFrame == 10) {
-                        weaponSpeed = 0;
+                if (_this.rightArm && _this.rightArm.isThrowWeapon()) {
+                    if (_this.rightArm.range > _this.width * 3) {
+                        _this.bodyAnim.gotoAndPlay("attack__1");
+                    } else if (_this.rightArm.range > _this.width * 2) {
+                        _this.bodyAnim.gotoAndPlay("attack");
                     } else {
-                        weaponSpeed = _this.rightArm.speed;
+                        _this.bodyAnim.gotoAndPlay("attack_1");
                     }
-                }
-                if (weaponSpeed >= 2) {
-                    _this.bodyAnim.gotoAndPlay("attack_2");
-                } else if (weaponSpeed == 1) {
-                    _this.bodyAnim.gotoAndPlay("attack_1");
-                } else if (weaponSpeed == -1) {
-                    _this.bodyAnim.gotoAndPlay("attack__1")
-                } else if (weaponSpeed <= -2) {
-                    _this.bodyAnim.gotoAndPlay("attack__2");
                 } else {
-                    _this.bodyAnim.gotoAndPlay("attack");
+                    var weaponSpeed = 2;
+                    if (_this.rightArm) {
+                        if (_this.bodyAnim.currentFrame == 10) {
+                            weaponSpeed = 0;
+                        } else {
+                            weaponSpeed = _this.rightArm.speed;
+                        }
+                    }
+                    if (weaponSpeed >= 2) {
+                        _this.bodyAnim.gotoAndPlay("attack_2");
+                    } else if (weaponSpeed == 1) {
+                        _this.bodyAnim.gotoAndPlay("attack_1");
+                    } else if (weaponSpeed == -1) {
+                        _this.bodyAnim.gotoAndPlay("attack__1")
+                    } else if (weaponSpeed <= -2) {
+                        _this.bodyAnim.gotoAndPlay("attack__2");
+                    } else {
+                        _this.bodyAnim.gotoAndPlay("attack");
+                    }
+                    _this.context.playSound("attack");
                 }
-
-                _this.context.playSound("attack");
-
                 _this.bodyAnim.onAnimationEnd = function () {
                     if (_this.action != CharacterAction.ATTACK) {
                         return;
@@ -408,6 +416,9 @@ p.updateFrame = function () {
                     _this.attackFrame = 0;
                     _this.vX = _this.vY = 0;
                     _this.action = CharacterAction.NONE;
+                    if (_this.rightArm) {
+                        _this.rightArm.alpha = 1;
+                    }
                 };
             }
 
@@ -421,6 +432,19 @@ p.updateFrame = function () {
                 _this.vX = Math.cos(_this.direction * Math.PI / 180) * 3;
                 _this.vY = Math.sin(_this.direction * Math.PI / 180) * 3;
             }
+
+            if (_this.bodyAnim.currentFrame == 12) {
+                if (_this.rightArm && _this.rightArm.isThrowWeapon()) {
+                    var activeItem = _this.rightArm.clone();
+                    activeItem.x = _this.x;
+                    activeItem.y = _this.y;
+
+                    _this.context.activeItems.push(activeItem);
+                    _this.context.addToStage(activeItem);
+                    _this.rightArm.alpha = 0;
+                }
+            }
+
         } else if (_this.action == CharacterAction.NONE) {
             _this.isAction = false;
             _this.vX = _this.vY = 0;
@@ -471,5 +495,17 @@ p.checkDropItem = function () {
                 break;
             }
         }
+    }
+};
+
+p.prepareThrowWeapon = function (target) {
+    var _this = this;
+    if (_this.rightArm && _this.rightArm.isThrowWeapon()) {
+        var deltaX = target.x - _this.x;
+        var deltaY = target.y - _this.y;
+        var theta = Math.atan2(deltaY, deltaX);
+        _this.rightArm.range = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+        _this.rightArm.vX = _this.rightArm.speed * Math.cos(theta);
+        _this.rightArm.vY = _this.rightArm.speed * Math.sin(theta);
     }
 };
