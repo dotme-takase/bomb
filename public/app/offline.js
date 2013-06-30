@@ -6,6 +6,7 @@ app.onInitialized = null;
 app.onGameover = null;
 app.viewApp = null;
 app.currentRank = "";
+app.screenScale = 1.0;
 function tick() {
     if (!app.pause) {
         try {
@@ -760,12 +761,12 @@ app.initializeGameDelegete = function (playData) {
         var CANVAS_TOP = typeof $ != "undefined" ? $(app.canvas).offset().top : 0;
         var touchEnable = typeof event != "undefined" && typeof event.touches != "undefined";
         if (touchEnable && event.touches[0]) {
-            player.axisX = event.touches[0].pageX - CANVAS_LEFT - app.canvas.width / 2;
-            player.axisY = event.touches[0].pageY - CANVAS_TOP - app.canvas.height / 2;
+            player.axisX = event.touches[0].pageX * app.screenScale - CANVAS_LEFT - app.canvas.width / 2;
+            player.axisY = event.touches[0].pageY * app.screenScale - CANVAS_TOP - app.canvas.height / 2;
             e.preventDefault();
         } else {
-            player.axisX = e.pageX - CANVAS_LEFT - app.canvas.width / 2;
-            player.axisY = e.pageY - CANVAS_TOP - app.canvas.height / 2;
+            player.axisX = e.pageX * app.screenScale - CANVAS_LEFT - app.canvas.width / 2;
+            player.axisY = e.pageY * app.screenScale - CANVAS_TOP - app.canvas.height / 2;
             e.preventDefault();
         }
     };
@@ -838,7 +839,7 @@ app.showLoading = function () {
 };
 
 window.onorientationchange = function () {
-    if (app.canvas) {
+    if (app.canvas && (typeof ejecta == 'undefined')) {
         app.canvas.width = window.innerWidth;
         app.canvas.height = window.innerHeight;
     }

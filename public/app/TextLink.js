@@ -4,8 +4,8 @@
         px:0,
         py:0,
         onTouchStart:function (e) {
-            TextLinkContainer.px = e.changedTouches[0].pageX;
-            TextLinkContainer.py = e.changedTouches[0].pageY;
+            TextLinkContainer.px = e.changedTouches[0].pageX * app.screenScale;
+            TextLinkContainer.py = e.changedTouches[0].pageY * app.screenScale;
             for (var k in TextLinkContainer.items)(function (item, i) {
                 if (item.enabled && item.wrapper.alpha == 1) {
                     if (TextLinkContainer.isInRect(TextLinkContainer.px, TextLinkContainer.py, item.rect)) {
@@ -17,8 +17,8 @@
             })(TextLinkContainer.items[k], k);
         },
         onTouchEnd:function (e) {
-            var x = e.changedTouches[0].pageX;
-            var y = e.changedTouches[0].pageY;
+            var x = e.changedTouches[0].pageX * app.screenScale;
+            var y = e.changedTouches[0].pageY * app.screenScale;
             for (var k in TextLinkContainer.items) {
                 var item = TextLinkContainer.items[k];
                 if (item.enabled && item.wrapper.alpha == 1) {
@@ -30,8 +30,8 @@
             }
         },
         onTouchMove:function (e) {
-            var x = e.touches[0].pageX;
-            var y = e.touches[0].pageY;
+            var x = e.touches[0].pageX * app.screenScale;
+            var y = e.touches[0].pageY * app.screenScale;
             for (var k in TextLinkContainer.items) {
                 var item = TextLinkContainer.items[k];
                 if (item.enabled && item.wrapper.alpha == 1) {
@@ -92,7 +92,7 @@
             .drawRect(rect.x, rect.y, rect.width, rect.height)
         );
         this.rectObj.alpha = 0.5;
-        this.textObj = new createjs.Text("", "bold 36px Arial", color);
+        this.textObj = new createjs.Text("", "bold 64px Arial", color);
         this.textObj.text = text;
         this.textObj.textAlign = "center";
         this.textObj.x = rect.x + rect.width / 2;

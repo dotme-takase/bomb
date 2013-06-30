@@ -1,5 +1,9 @@
 var _canvas = document.getElementById("canvas");
-
+var ratio = window.innerHeight / window.innerWidth;
+_canvas.width = 400;
+_canvas.height = canvas.width * ratio;
+_canvas.style.width = window.innerWidth;
+_canvas.style.height = window.innerHeight;
 ///
 var LoadingIcon = function () {
     this.initialize.apply(this, arguments)
@@ -111,6 +115,7 @@ function refreshRanking() {
     }
 }
 __.i18nLoaded = function () {
+	app.screenScale = _canvas.width / window.innerWidth;
     app.canvas = _canvas;
     app.rootPath = ".";
     app.onInitialized = function () {
@@ -132,9 +137,9 @@ __.i18nLoaded = function () {
             __.mainMenu,
             {
                 x:4,
-                y:app.canvas.height - 100,
+                y:app.canvas.height - 140,
                 width:app.canvas.width - 8,
-                height:48
+                height:64
             },
             __.i18n.prop("menuStartGame"),
             "#FFFFFF",
@@ -150,9 +155,9 @@ __.i18nLoaded = function () {
             __.mainMenu,
             {
                 x:4,
-                y:app.canvas.height - 50,
+                y:app.canvas.height - 70,
                 width:app.canvas.width - 8,
-                height:48
+                height:64
             },
             __.i18n.prop("menuRanking"),
             "#FFFFFF",
