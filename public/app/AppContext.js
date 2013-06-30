@@ -119,7 +119,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         _this.playData = {
             id: null,
             floorNumber: 1,
-            rightArm: "grenade",
+            rightArm: "crossBombTimer",
             leftArm: "woodenShield"
         };
     }
@@ -166,7 +166,9 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         } else if (_this.sounds && buzz) {
             if (_this.sounds.hasOwnProperty(name)) {
                 var sound = _this.sounds[name];
-                sound.play();
+                var index = _this.sounds["__keys__"][name];
+                sound[index].play();
+                _this.sounds["__keys__"][name] = (index + 1) % _this.sounds["__num__"];
             }
         }
     };
@@ -419,23 +421,30 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         _this.activeItems = tempItems;
 
         var hitRange = 16;
+        var deltaW = 0;
+        var deltaH = 0;
         for (var k in _this.activeItems) {
             var obj = _this.activeItems[k];
             obj.px = obj.x;
             obj.py = obj.y;
             var isTouched = false;
+
+            if (obj.leftTime > 0) {
+                obj.leftTime--;
+            }
             if (obj.range > 0) {
                 obj.x += obj.vX;
                 obj.y += obj.vY;
                 var step = Math.sqrt(Math.pow(obj.vX, 2) + Math.pow(obj.vY, 2));
                 obj.step += step;
-                if (obj.type == BitmapItem.TYPE_BOMB || obj.type == BitmapItem.TYPE_BOMB_REMOTE) {
+                if (obj.type == BitmapItem.TYPE_BOMB
+                    || obj.type == BitmapItem.TYPE_BOMB_REMOTE
+                    || obj.type == BitmapItem.TYPE_BOMB_TIMER) {
                     obj.range -= step;
                     //obj.rotate(10);
                 }
             } else {
                 obj.range = obj.vX = obj.vY = 0;
-                continue;
             }
 
             //ToDo character.width
@@ -453,17 +462,17 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
                         } else {
                             theta += Math.PI;
                         }
-                        obj.vX = obj.speed * Math.cos(theta);
-                        obj.vY = obj.speed * Math.sin(theta);
+//                        obj.vX = obj.speed * Math.cos(theta);
+//                        obj.vY = obj.speed * Math.sin(theta);
                         isTouched = true;
                     }
                 }
             }
 
-            var mapPoint = _this.getMapPoint(obj);
+            var mapPoint = _this.getMapPoint({x: obj.px, y: obj.py});
             var nearBlocks = [];
-            for (var _y = mapPoint.y - 2; _y < mapPoint.y + 3; _y++) {
-                for (var _x = mapPoint.x - 2; _x < mapPoint.x + 3; _x++) {
+            for (var _y = mapPoint.y - 2; _y <= mapPoint.y + 5; _y++) {
+                for (var _x = mapPoint.x - 2; _x <= mapPoint.x + 5; _x++) {
                     if ((typeof _this.blockMap[_y] != "undefined")
                         && (typeof _this.blockMap[_y][_x] != "undefined")
                         && (_this.blockMap[_y][_x] != null)) {
@@ -477,89 +486,111 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
             var len = nearBlocks.length;
             for (var i = 0; i < len; i++) {
                 var block = nearBlocks[i];
-                if (obj.y > block.y
-                    && obj.y < block.y + _this.tileSize
-                    && obj.px >= block.x + _this.tileSize + hitRange / 2
-                    && obj.x < block.x + _this.tileSize + hitRange / 2) {
-                    obj.vX = obj.vX * -1;
-                    isTouched = true;
+                if ((typeof nearBlocks[i + 1] != "undefined")
+                    || (nearBlocks[i + 1] == null)) {
+                    if (obj.y > block.y - deltaH
+                        && obj.y < block.y + _this.tileSize + deltaH
+                        && obj.px >= block.x + _this.tileSize + hitRange / 2
+                        && obj.x < block.x + _this.tileSize + hitRange / 2) {
+                        obj.vX = obj.vX * -1;
+                        obj.x += obj.vX * 2;
+                        isTouched = true;
+                    }
                 }
 
-                if (obj.y > block.y
-                    && obj.y < block.y + _this.tileSize
-                    && obj.x > block.x - hitRange / 2
-                    && obj.px <= block.x - hitRange / 2) {
-                    obj.vX = obj.vX * -1;
-                    isTouched = true;
+                if ((typeof nearBlocks[i - 1] != "undefined")
+                    || (nearBlocks[i - 1] == null)) {
+                    if (obj.y > block.y - deltaH
+                        && obj.y < block.y + _this.tileSize + deltaH
+                        && obj.x > block.x - hitRange / 2
+                        && obj.px <= block.x - hitRange / 2) {
+                        obj.vX = obj.vX * -1;
+                        obj.x += obj.vX * 2;
+                        isTouched = true;
+                    }
                 }
 
-                if (obj.py >= block.y + _this.tileSize + hitRange / 2
-                    && obj.y < block.y + _this.tileSize + hitRange / 2
-                    && obj.x > block.x
-                    && obj.x < block.x + _this.tileSize) {
-                    obj.vY = obj.vY * -1;
-                    isTouched = true;
+                if ((typeof nearBlocks[i + 5] != "undefined")
+                    || (nearBlocks[i + 5] == null)) {
+                    if (obj.py >= block.y + _this.tileSize + hitRange / 2
+                        && obj.y < block.y + _this.tileSize + hitRange / 2
+                        && obj.x > block.x - deltaW
+                        && obj.x < block.x + _this.tileSize + deltaW) {
+                        obj.vY = obj.vY * -1;
+                        obj.y += obj.vY * 2;
+                        isTouched = true;
+                    }
                 }
 
-                if (obj.y > block.y - hitRange / 2
-                    && obj.py <= block.y - hitRange / 2
-                    && obj.x > block.x
-                    && obj.x < block.x + _this.tileSize) {
-                    obj.vY = obj.vY * -1;
-                    isTouched = true;
+                if ((typeof nearBlocks[i - 5] != "undefined")
+                    || (nearBlocks[i - 5] == null)) {
+                    if (obj.y > block.y - hitRange / 2
+                        && obj.py <= block.y - hitRange / 2
+                        && obj.x > block.x - deltaW
+                        && obj.x < block.x + _this.tileSize + deltaW) {
+                        obj.vY = obj.vY * -1;
+                        obj.y += obj.vY * 2;
+                        isTouched = true;
+                    }
                 }
             }
 
-            if (isTouched || obj.range <= 0) {
-                if (obj.type == BitmapItem.TYPE_BULLET || obj.type == BitmapItem.TYPE_BOMB) {
-                    if (obj.type == BitmapItem.TYPE_BOMB) {
-                        if(isTouched){
-                            obj.x += obj.vX;
-                            obj.y += obj.vY;
-                        }
+            if (((isTouched || obj.range <= 0)
+                && (obj.type == BitmapItem.TYPE_BOMB || obj.type == BitmapItem.TYPE_BULLET))
+                || (obj.leftTime == 0 && obj.type == BitmapItem.TYPE_BOMB_TIMER)) {
+                if (obj.type == BitmapItem.TYPE_BOMB
+                    || obj.type == BitmapItem.TYPE_BOMB_REMOTE
+                    || obj.type == BitmapItem.TYPE_BOMB_TIMER) {
+                    var damagedStateId = new Array();
+                    var range2d = obj.range2d.split('x');
+                    if (range2d.length == 2) {
+                        var bStep1 = _this.tileSize / 2;
+                        for (var b2 = 1; b2 <= range2d[1]; b2++) {
+                            for (var b1 = 0; b1 <= range2d[0]; b1 += bStep1) {
+                                var bAngle = ((Math.PI * 2 * b2) / range2d[1]);
+                                var bX = b1 * Math.cos(bAngle) + obj.x;
+                                var bY = b1 * Math.sin(bAngle) + obj.y;
+                                var mapPoint = _this.getMapPoint({x: bX, y: bY});
+                                var block = _this.blockMap[mapPoint.y][mapPoint.x];
+                                if ((block == null)
+                                    || (block.substring(0, 1) != "w")) {
+                                    _this.addEffect(bX, bY, "bomb");
+                                    for (var k in  _this.characters) {
+                                        var other = _this.characters[k];
+                                        if (damagedStateId.indexOf(other.stateId) < 0) {
+                                            var deltaX = other.x - bX;
+                                            var deltaY = other.y - bY;
+                                            var range = (other.width);
+                                            var distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+                                            if (distance <= range) {
+                                                var theta = Math.atan2((other.y - obj.y), (other.x - obj.x));
+                                                var angleForObj = (theta * 180 / Math.PI) - 180 - other.direction;
+                                                angleForObj = AppUtils.fixAngle(angleForObj);
+                                                if ((other.isAction && (other.action == CharacterAction.DEFENCE)
+                                                    && (other.leftArm != null && other.leftArm.type == BitmapItem.TYPE_SHIELD))
+                                                    && ((angleForObj > -30) && (angleForObj < 30))) {
+                                                    other.leftArm.onUse(other, obj);
+                                                } else if (!other.isAction || (other.action != CharacterAction.DAMAGE)) {
+                                                    var kickBackRange = -1 * Math.random() * other.width / 4;
+                                                    other.vX -= Math.cos(theta) * kickBackRange;
+                                                    other.vY -= Math.sin(theta) * kickBackRange;
+                                                    other.isAction = true;
+                                                    other.action = CharacterAction.DAMAGE;
+                                                    other.HP -= Math.ceil(obj.bonusPoint * (Math.random() * 0.20 + 1));
 
-                        var damagedStateId = new Array();
-                        var range2d = obj.range2d.split('x');
-                        if (range2d.length == 2) {
-                            var bStep1 = _this.tileSize / 4;
-                            for (var b2 = 0; b2 < range2d[1]; b2++) {
-                                for (var b1 = 0; b1 < range2d[0]; b1 += bStep1) {
-                                    var bAngle = ((Math.PI * 2 * b2) / range2d[1]);
-                                    var bX = b1 * Math.cos(bAngle) + obj.x;
-                                    var bY = b1 * Math.sin(bAngle) + obj.y;
-                                    var mapPoint = _this.getMapPoint({x: bX, y: bY});
-                                    var block = _this.blockMap[mapPoint.y][mapPoint.x];
-                                    if ((block == null)
-                                        || (block.substring(0, 1) != "w")) {
-                                        _this.addEffect(bX, bY, "smoke");
-                                        _this.addEffect(bX, bY, "bomb");
-                                        for (var k in  _this.characters) {
-                                            var other = _this.characters[k];
-                                            if (damagedStateId.indexOf(other.stateId) < 0) {
-                                                var deltaX = other.x - bX;
-                                                var deltaY = other.y - bY;
-                                                var range = (other.width);
-                                                var distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-                                                if (distance <= range) {
-                                                    var theta = Math.atan2((other.y - obj.y), (other.x - obj.x));
-                                                    if (!other.isAction || (other.action != CharacterAction.DAMAGE)) {
-                                                        var kickBackRange = -1 * Math.random() * other.width / 4;
-                                                        other.vX -= Math.cos(theta) * kickBackRange;
-                                                        other.vY -= Math.sin(theta) * kickBackRange;
-                                                        other.isAction = true;
-                                                        other.action = CharacterAction.DAMAGE;
-                                                        other.HP -= Math.ceil(obj.bonusPoint * (Math.random() * 0.20 + 1));
-                                                        //todo update player's enemy
+                                                    if ((_this.playData != null) && (other == _this.player)) {
+                                                        _this.playData.enemy = obj.useCharacter;
                                                     }
                                                 }
                                             }
                                         }
-                                    } else {
-                                        break;
                                     }
+                                } else {
+                                    //break;
                                 }
                             }
                         }
+                        _this.playSound("bomb");
                     }
                     obj.alpha = 0;
                 }
@@ -906,7 +937,7 @@ var AppUtils = exports.AppUtils = {
                     var trailNode = trail[i];
                     if ((trailNode.x == relayNode.x)
                         && (trailNode.y == relayNode.y)) {
-                        console.log("no route");
+                        //console.log("no route");
                         return null;
                     }
                 }
@@ -1313,6 +1344,7 @@ var AppUtils = exports.AppUtils = {
                     character.nextToTarget = character.path.shift();
                 }
                 if (character.target) {
+
                     if ((distance < range * 5)
                         && (angleForTarget > -60) && (angleForTarget < 60)) {
                         character.mode = EnemyMode.ATTACK_TO_TARGET;
@@ -1349,9 +1381,13 @@ var AppUtils = exports.AppUtils = {
                     }
                 }
             } else if (character.mode == EnemyMode.ATTACK_TO_TARGET) {
+                var inRange = (distance < range + character.rightArm.range);
+                if (character.rightArm.isThrowWeapon()) {
+                    inRange = (distance < range + character.width * 1.5);
+                }
                 if (character.target.HP <= 0) {
                     character.mode = EnemyMode.RANDOM_WALK;
-                } else if (distance < range + character.rightArm.range) {
+                } else if (inRange) {
                     var dice = Math.random() * 4;
                     if (!character.isAction) {
                         character.isWalk = false;
@@ -1413,7 +1449,7 @@ var AppUtils = exports.AppUtils = {
                 }
             } else {
                 _this.isWalk = false;
-                if (!_this.isAction && _this.isMouseClick) {
+                if (!_this.isAction && (_this.isMouseClick && !_this.isMouseDoubleDown)) {
                     _this.isAction = true;
                     _this.action = CharacterAction.DEFENCE_MOTION;
                 }

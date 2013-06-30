@@ -76,7 +76,7 @@ var enemyData = [
         HP: 10,
         speed: 5,
         items: {
-            rightArm: "shortSword",
+            rightArm: "grenade",
             leftArm: null,
             dropItems: {
                 aidBox: 5
@@ -89,10 +89,10 @@ var enemyData = [
         HP: 10,
         speed: 5,
         items: {
-            rightArm: "shortSword",
+            rightArm: "longSword",
             leftArm: null,
             dropItems: {
-                woodenShield: 3,
+                grenade: 3,
                 aidBox: 5
             }
         }
@@ -103,11 +103,11 @@ var enemyData = [
         HP: 10,
         speed: 5,
         items: {
-            rightArm: "shortSword",
+            rightArm: "crossGrenade",
             leftArm: "woodenShield",
             dropItems: {
                 bronzeShield: 1,
-                woodenShield: 3,
+                crossGrenade: 3,
                 aidBox: 5
             }
         }
@@ -338,23 +338,31 @@ var itemData = {
                 aid);
         }
     },
+    crossBombTimer: {
+        type: BitmapItem.TYPE_BOMB_TIMER,
+        range2d: "64x4",
+        bonusPoint: 12,
+        speed: 24,
+        leftTime: 20
+    },
     grenade: {
         type: BitmapItem.TYPE_BOMB,
-        range2d: "64x9",
+        range2d: "32x9",
         bonusPoint: 16,
-        speed:16
+        speed: 24
     },
     crossGrenade: {
         type: BitmapItem.TYPE_BOMB,
-        range2d: "256x4",
+        range2d: "96x4",
         bonusPoint: 16,
-        speed:16
+        speed: 24
     },
-    bombRemote: {
-        type: BitmapItem.TYPE_BOMB_REMOTE,
+    bombTimer: {
+        type: BitmapItem.TYPE_BOMB_TIMER,
         range2d: "64x9",
-        bonusPoint: 16,
-        speed:12
+        bonusPoint: 12,
+        speed: 24,
+        leftTime: 20
     }
 };
 
@@ -388,7 +396,7 @@ app.loadTiles = function (filename, callback) {
             s1: [21, 21]
         }
     });
-    app.spriteSheetTiles.onComplete = function () {
+    onCompleteTiles = function () {
         var names = app.spriteSheetTiles.getAnimations();
         var hasDataURL = false;
         try {
@@ -410,6 +418,7 @@ app.loadTiles = function (filename, callback) {
         app.hideLoading();
         callback.call(this);
     };
+    setTimeout(onCompleteTiles, 500);
 };
 
 app.initializeFirst = function () {
@@ -426,6 +435,7 @@ app.initializeFirst = function () {
     app.viewLoading = new createjs.Container();
     app.stage.addChild(app.viewLoading);
 
+    window.onorientationchange();
     app.viewLoading.addChild(new createjs.Shape((new createjs.Graphics())
         .beginFill('#000000')
         .drawRect(0, 0, app.canvas.width, app.canvas.height)
@@ -451,8 +461,7 @@ app.initializeFirst = function () {
             heal: [10, 24],
             dead: [25, 39],
             fire: [40, 49],
-            bomb: [50, 59],
-            smoke: [61, 75]
+            bomb: [50, 69]
         }
     });
 
@@ -501,7 +510,8 @@ app.initializeFirst = function () {
             aidBox: 0,
             grenade: 16,
             crossGrenade: 17,
-            bombRemote: 18
+            crossBombTimer:18,
+            bombTimer: 18
         }
     });
 
@@ -563,13 +573,19 @@ app.initializeFirst = function () {
                 a.src = path + "/" + soundName + ".mp3"
                 __sounds[soundName] = a;
             }
-        } else if ((typeof AppMobi != "undefined") && (buzz.isSupported())) {
+        } else if (buzz.isSupported()) {
             __sounds = new Array();
             buzz.defaults.preload = true;
             if (buzz.isOGGSupported() || buzz.isWAVSupported() || buzz.isMP3Supported()) {
+                __sounds["__keys__"] = new Object();
+                __sounds["__num__"] = 5;
                 for (var k in sounds) {
                     var soundName = sounds[k];
-                    __sounds[soundName] = new buzz.sound(path + "/" + soundName, {formats: [ "ogg", "mp3", "wav" ]});
+                    __sounds[soundName] = new Array();
+                    for (var i = 0; i < __sounds["__num__"]; i++) {
+                        __sounds[soundName][i] = new buzz.sound(path + "/" + soundName, {formats: [ "ogg", "mp3", "wav" ]});
+                    }
+                    __sounds["__keys__"][soundName] = 0;
                 }
             } else {
                 __sounds = null;
@@ -653,6 +669,7 @@ app.initializeGameDelegete = function (playData) {
         app.context.itemMaster[app.context.playData.rightArm],
         app.context.itemMaster[app.context.playData.leftArm]);
     player.isPlayer = true;
+    player.name = "Yourself";
     player.onUpdate = app.context.collideBlocks;
     player.x = 384;
     player.y = 384;

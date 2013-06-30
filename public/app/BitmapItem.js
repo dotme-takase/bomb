@@ -15,6 +15,7 @@
 
     BitmapItem.TYPE_BULLET = "bullet";
     BitmapItem.TYPE_BOMB = "bomb";
+    BitmapItem.TYPE_BOMB_TIMER = "bombTimer";
     BitmapItem.TYPE_BOMB_REMOTE = "bombRemote";
 
 
@@ -67,6 +68,7 @@
 
     p.onUse = function (character, target) {
         var _this = this;
+        _this.useCharacter = character;
         switch (_this.type) {
             case BitmapItem.TYPE_SWORD:
                 break;
@@ -83,7 +85,9 @@
 
     p.isThrowWeapon = function () {
         var _this = this;
-        return (_this.type == BitmapItem.TYPE_BOMB || _this.type == BitmapItem.TYPE_BOMB_REMOTE);
+        return (_this.type == BitmapItem.TYPE_BOMB
+            || _this.type == BitmapItem.TYPE_BOMB_REMOTE
+            || _this.type == BitmapItem.TYPE_BOMB_TIMER);
     };
 
     p.clone = function () {
@@ -91,10 +95,12 @@
         var _clone = _this.BitmapAnimation_clone();
         _clone.BitmapAnimation_clone = _this.BitmapAnimation_clone;
         _clone.HP = _this.HP;
+        _clone.leftTime = _this.leftTime;
         _clone.bonusPoint = _this.bonusPoint;
         _clone.range = _this.range;
         _clone.range2d = _this.range2d;
         _clone.speed = _this.speed;
+        _clone.useCharacter = _this.useCharacter;
         _clone.vX = _this.vX;
         _clone.vY = _this.vY;
         _clone.type = _this.type;
@@ -114,12 +120,14 @@
     p.initialize = function (spriteSheet) {
         this.BitmapAnimation_initialize(spriteSheet);
         this.HP = 0;
+        this.leftTime = 0;
         this.bonusPoint = 0;
         this.range = 0;
         this.vX = 0;
         this.vY = 0;
         this.range2d = "0x0"; //radius x angle
         this.speed = 0;
+        this.useCharacter = null;
         this.type = null;
     };
     window.BitmapItem = BitmapItem;

@@ -368,12 +368,12 @@ p.updateFrame = function () {
             _this.alpha = 0.5;
         } else if (_this.action == CharacterAction.DEAD) {
             delete _this.context.characters[_this.stateId];
-            var size = _this.width / 4;
+            var size = _this.width / 2;
             var half = size / 2;
-            for (var i = 0; i < 4; i++) {
-                _this.context.addEffect(_this.x + Math.random() * size - half, _this.y + Math.random() * size - half, "smoke");
+            for (var i = 0; i < 8; i++) {
+                _this.context.addEffect(_this.x + Math.random() * size - half, _this.y + Math.random() * size - half, "dead");
             }
-            _this.context.playSound("bomb");
+            _this.context.playSound("defeat");
             _this.context.removeFromStage(_this);
         } else if (_this.action == CharacterAction.ATTACK) {
             _this.attackFrame = _this.bodyAnim.currentAnimationFrame;
@@ -416,9 +416,6 @@ p.updateFrame = function () {
                     _this.attackFrame = 0;
                     _this.vX = _this.vY = 0;
                     _this.action = CharacterAction.NONE;
-                    if (_this.rightArm) {
-                        _this.rightArm.alpha = 1;
-                    }
                 };
             }
 
@@ -442,6 +439,9 @@ p.updateFrame = function () {
                     _this.context.activeItems.push(activeItem);
                     _this.context.addToStage(activeItem);
                     _this.rightArm.alpha = 0;
+                    setTimeout(function () {
+                        _this.rightArm.alpha = 1;
+                    }, 500);
                 }
             }
 
@@ -507,5 +507,6 @@ p.prepareThrowWeapon = function (target) {
         _this.rightArm.range = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
         _this.rightArm.vX = _this.rightArm.speed * Math.cos(theta);
         _this.rightArm.vY = _this.rightArm.speed * Math.sin(theta);
+        _this.rightArm.useCharacter = this;
     }
 };
