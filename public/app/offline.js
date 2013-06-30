@@ -745,7 +745,6 @@ app.initializeGameDelegete = function (playData) {
     })(i);
 
     //////
-    player.drugMode = false;
     player.isMouseDown = player.isMouseDoubleDown = false;
     player.clickDuration = false;
     player.isMouseClick = player.isMouseDoubleClick = false;
@@ -772,18 +771,13 @@ app.initializeGameDelegete = function (playData) {
     };
 
     player.onMouseDown = function (e) {
-        if (player.drugMode) {
-            if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(32, 2)) {
-                player.isCursor = true;
-            }
-        } else {
-            if (!player.isMouseClick) {
-                player.isCursor = true;
-            }
+    	onDrag(e);
+    	if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(24, 2)) {
+            player.isCursor = true;
         }
+    	
         player.isMouseClick = player.isMouseDoubleClick = false;
         player.isMouseDown = true;
-        onDrag(e);
         if (player.isMouseClick) {
             player.clickDuration = false;
             player.isMouseDoubleDown = true;

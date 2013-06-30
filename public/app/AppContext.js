@@ -1437,9 +1437,6 @@ var AppUtils = exports.AppUtils = {
             }
 
             if (_this.isCursor) {
-                _this.isWalk = true;
-                _this.isAction = false;
-            } else if (_this.isMouseDown) {
                 _this.isWalk = false;
                 if (_this.isAction) {
                     if (_this.action == CharacterAction.DEFENCE) {
@@ -1450,8 +1447,15 @@ var AppUtils = exports.AppUtils = {
                 } else {
                     _this.isAction = true;
                     _this.action = CharacterAction.DEFENCE_MOTION;
-                    _this.defenceCount = 8;
+                    if( _this.rightArm && !_this.rightArm.isThrowWeapon()){
+                    	_this.defenceCount = 8;
+                    } else {
+                    	_this.defenceCount = 0;
+                    }
                 }
+            } else if (_this.isMouseDown) {
+            	_this.isWalk = true;
+                _this.isAction = false;
             } else {
                 _this.isWalk = false;
                 if (!_this.isAction && _this.isMouseClick) {
