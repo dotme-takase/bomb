@@ -774,7 +774,7 @@ app.initializeGameDelegete = function (playData) {
     player.onMouseDown = function (e) {
     	onDrag(e);
     	if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(24, 2)) {
-            player.isCursor = true;
+        //    player.isCursor = true;
         }
     	
         player.isMouseClick = player.isMouseDoubleClick = false;
