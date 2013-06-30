@@ -208,8 +208,7 @@ __.i18nLoaded = function () {
         loading.stop();
     }, 500);
 //app.pause = false;
-}
-;
+};
 
 
 

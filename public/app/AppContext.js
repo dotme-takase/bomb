@@ -557,6 +557,9 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
                                     _this.addEffect(bX, bY, "bomb");
                                     for (var k in  _this.characters) {
                                         var other = _this.characters[k];
+                                        if (!other.isPlayer && (obj.useCharacter.stateId == other.stateId)){
+                                        	continue;
+                                        }
                                         if (damagedStateId.indexOf(other.stateId) < 0) {
                                             var deltaX = other.x - bX;
                                             var deltaY = other.y - bY;
@@ -1344,7 +1347,6 @@ var AppUtils = exports.AppUtils = {
                     character.nextToTarget = character.path.shift();
                 }
                 if (character.target) {
-
                     if ((distance < range * 5)
                         && (angleForTarget > -60) && (angleForTarget < 60)) {
                         character.mode = EnemyMode.ATTACK_TO_TARGET;
@@ -1383,11 +1385,15 @@ var AppUtils = exports.AppUtils = {
             } else if (character.mode == EnemyMode.ATTACK_TO_TARGET) {
                 var inRange = (distance < range + character.rightArm.range);
                 if (character.rightArm.isThrowWeapon()) {
-                    inRange = (distance < range + character.width * 1.5);
+                	var mPt1 = character.context.getMapPoint(character);
+                	var mPt2 = character.context.getMapPoint(character.target);
+                	var rand = Math.random() * 1.5;
+                    inRange = (((mPt1.x == mPt2.x) || (mPt1.y == mPt2.y))
+                    		&& (distance < range + character.width * (1.5 + rand)));
                 }
                 if (character.target.HP <= 0) {
                     character.mode = EnemyMode.RANDOM_WALK;
-                } else if (inRange) {
+                } else if (inRange || (character.action == CharacterAction.ATTACK)) {
                     var dice = Math.random() * 4;
                     if (!character.isAction) {
                         character.isWalk = false;
@@ -1403,7 +1409,6 @@ var AppUtils = exports.AppUtils = {
                             || (character.action == CharacterAction.DEFENCE_MOTION)) {
                             if (character.aiWait <= 0) {
                                 character.action = CharacterAction.ATTACK;
-                                character.prepareThrowWeapon(character.target);
                             }
                         }
                     }
@@ -1449,9 +1454,9 @@ var AppUtils = exports.AppUtils = {
                 }
             } else {
                 _this.isWalk = false;
-                if (!_this.isAction && (_this.isMouseClick && !_this.isMouseDoubleDown)) {
+                if (!_this.isAction && _this.isMouseClick) {
                     _this.isAction = true;
-                    _this.action = CharacterAction.DEFENCE_MOTION;
+                    _this.action = CharacterAction.ATTACK;
                 }
 
                 if (_this.isAction) {
@@ -1463,10 +1468,8 @@ var AppUtils = exports.AppUtils = {
                     } else if ((_this.action == CharacterAction.DEFENCE)
                         && (_this.defenceCount > 0)) {
                         _this.action = CharacterAction.ATTACK;
-                        _this.prepareThrowWeapon(axisTarget);
                     } else if (_this.action == CharacterAction.DEFENCE_MOTION) {
-                        _this.action = CharacterAction.ATTACK;
-                        _this.prepareThrowWeapon(axisTarget);
+                        _this.action = CharacterAction.ATTACK;                        
                     } else {
                         _this.isAction = false;
                         _this.action = CharacterAction.NONE;

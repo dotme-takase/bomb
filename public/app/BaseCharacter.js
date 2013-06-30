@@ -380,6 +380,16 @@ p.updateFrame = function () {
             if ((_this.bodyAnim.currentAnimation == null)
                 || (_this.bodyAnim.currentAnimation.indexOf("attack") != 0)) {
                 if (_this.rightArm && _this.rightArm.isThrowWeapon()) {
+                	if (_this.isPlayer){
+                		var axisTarget = {
+                                x: _this.axisX + _this.x,
+                                y: _this.axisY + _this.y
+                            }
+                		_this.prepareThrowWeapon(axisTarget);
+                	} else if(_this.hasOwnProperty('target')) {
+                		_this.prepareThrowWeapon(_this.target);
+                	}
+                	
                     if (_this.rightArm.range > _this.width * 3) {
                         _this.bodyAnim.gotoAndPlay("attack__1");
                     } else if (_this.rightArm.range > _this.width * 2) {

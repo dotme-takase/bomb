@@ -89,7 +89,7 @@ var enemyData = [
         HP: 10,
         speed: 5,
         items: {
-            rightArm: "longSword",
+            rightArm: "crossGrenade",
             leftArm: null,
             dropItems: {
                 grenade: 3,
@@ -132,10 +132,10 @@ var enemyData = [
         HP: 15,
         speed: 6,
         items: {
-            rightArm: "longSword",
+            rightArm: "crossBombTimer",
             leftArm: null,
             dropItems: {
-                longSword: 1,
+            	crossBombTimer: 1,
                 aidBox: 5
             }
         }
@@ -146,10 +146,10 @@ var enemyData = [
         HP: 15,
         speed: 6,
         items: {
-            rightArm: "shortSword",
+            rightArm: "crossGrenade",
             leftArm: "bronzeShield",
             dropItems: {
-                bronzeShield: 3,
+            	crossBombTimer: 3,
                 aidBox: 5
             }
         }
@@ -160,10 +160,10 @@ var enemyData = [
         HP: 40,
         speed: 5,
         items: {
-            rightArm: "longSword",
+            rightArm: "bombTimer",
             leftArm: null,
             dropItems: {
-                longSword: 4,
+                bombTimer: 4,
                 aidBox: 5
             }
         }
@@ -174,11 +174,11 @@ var enemyData = [
         HP: 20,
         speed: 12,
         items: {
-            rightArm: "fasterShortSword",
+            rightArm: "katana",
             leftArm: null,
             dropItems: {
                 katana: 2,
-                fasterShortSword: 6,
+                crossBombTimer: 6,
                 aidBox: 8
             }
         }
@@ -192,7 +192,7 @@ var enemyData = [
             rightArm: "handAxe",
             leftArm: "bronzeShield",
             dropItems: {
-                handAxe: 5,
+            	crossBombTimer: 5,
                 bronzeShield: 3,
                 aidBox: 5
             }
@@ -204,10 +204,10 @@ var enemyData = [
         HP: 40,
         speed: 10,
         items: {
-            rightArm: "ryuyotou",
+        	crossGrenade: "ryuyotou",
             leftArm: "ironShield",
             dropItems: {
-                ryuyotou: 2,
+            	crossGrenade: 2,
                 ironShield: 3,
                 aidBox: 3
             }
@@ -219,10 +219,10 @@ var enemyData = [
         HP: 50,
         speed: 12,
         items: {
-            rightArm: "katana",
+            rightArm: "crossGrenade",
             leftArm: null,
             dropItems: {
-                katana: 1,
+            	crossGrenade: 1,
                 aidBox: 5
             }
         }
@@ -233,10 +233,10 @@ var enemyData = [
         HP: 40,
         speed: 14,
         items: {
-            rightArm: "katana",
+            rightArm: "bombTimer",
             leftArm: "redShield",
             dropItems: {
-                katana: 3,
+            	bombTimer: 3,
                 redShield: 1,
                 aidBox: 5
             }
@@ -248,10 +248,10 @@ var enemyData = [
         HP: 80,
         speed: 7,
         items: {
-            rightArm: "broadSword",
+            rightArm: "bombTimer",
             leftArm: "blueShield",
             dropItems: {
-                broadSword: 1,
+            	bombTimer: 1,
                 blueShield: 2,
                 aidBox: 5
             }
@@ -329,7 +329,7 @@ var itemData = {
     aidBox: {
         type: BitmapItem.TYPE_MISC,
         onUse: function (character, target) {
-            var aid = 50;
+            var aid = 10;
             character.context.addEffect(character.x,
                 character.y,
                 'heal');
@@ -359,7 +359,7 @@ var itemData = {
     },
     bombTimer: {
         type: BitmapItem.TYPE_BOMB_TIMER,
-        range2d: "64x9",
+        range2d: "96x9",
         bonusPoint: 12,
         speed: 24,
         leftTime: 20
