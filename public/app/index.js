@@ -1,6 +1,6 @@
 var _canvas = document.getElementById("canvas");
 var ratio = window.innerHeight / window.innerWidth;
-_canvas.width = 400;
+_canvas.width = 480;
 _canvas.height = canvas.width * ratio;
 _canvas.style.width = window.innerWidth;
 _canvas.style.height = window.innerHeight;

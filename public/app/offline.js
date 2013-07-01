@@ -7,6 +7,7 @@ app.onGameover = null;
 app.viewApp = null;
 app.currentRank = "";
 app.screenScale = 1.0;
+app.isEventListen = false;
 function tick() {
     if (!app.pause) {
         try {
@@ -773,10 +774,10 @@ app.initializeGameDelegete = function (playData) {
         }
     };
 
-    player.onMouseDown = function (e) {
+    function onMouseDown(e) {
         onDrag(e);
         if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(24, 2)) {
-            //    player.isCursor = true;
+            player.isCursor = true;
         }
 
         player.isMouseClick = player.isMouseDoubleClick = false;
@@ -797,10 +798,10 @@ app.initializeGameDelegete = function (playData) {
         }
         player.doubleDownDuration = false;
     };
-    player.onMouseMove = function (e) {
+    function onMouseMove(e) {
         onDrag(e);
     };
-    player.onMouseUp = function (e) {
+    function onMouseUp (e) {
         player.isCursor = false;
         clearTimeout(player.upTimeout);
         if (player.doubleClickDuration) {
@@ -818,26 +819,27 @@ app.initializeGameDelegete = function (playData) {
                 player.doubleDownDuration = false;
             }, clickTime);
         } else {
-            player.axisX = player.axisY = 0
+        	player.isMouseClick = player.isMouseDoubleClick = false;
         }
         player.clickDuration = player.doubleClickDuration = false;
         player.vX = player.vY = 0;
         player.isMouseDown = player.isMouseDoubleDown = false;
     };
 
-    if (document.hasOwnProperty("ontouchstart")
-        && (navigator.userAgent.indexOf("Firefox") < 0)) {
-        app.canvas.addEventListener('touchstart', player.onMouseDown);
-        app.canvas.addEventListener('touchmove', player.onMouseMove);
-        app.canvas.addEventListener('touchend', player.onMouseUp);
-        app.canvas.addEventListener('touchleave', player.onMouseUp);
-    } else {
-        app.canvas.addEventListener('mousedown', player.onMouseDown);
-        app.canvas.addEventListener('mousemove', player.onMouseMove);
-        app.canvas.addEventListener('mouseup', player.onMouseUp);
-        app.canvas.addEventListener('mouseleave', player.onMouseUp);
-    }
-
+    if(!app.isEventListen){
+    	if (document.hasOwnProperty("ontouchstart") || (typeof ejecta != "undefined")) {
+            app.canvas.addEventListener('touchstart', onMouseDown, false);
+            app.canvas.addEventListener('touchmove', onMouseMove, false);
+            app.canvas.addEventListener('touchend', onMouseUp, false);
+            app.canvas.addEventListener('touchleave', onMouseUp, false);
+        } else {
+            app.canvas.addEventListener('mousedown', onMouseDown, false);
+            app.canvas.addEventListener('mousemove', onMouseMove, false);
+            app.canvas.addEventListener('mouseup', onMouseUp, false);
+            app.canvas.addEventListener('mouseleave', onMouseUp, false);
+        }
+    	app.isEventListen = true;
+    } 
 
     app.hideLoading();
     app.initializing = false;
