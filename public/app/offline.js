@@ -136,7 +136,7 @@ var enemyData = [
             rightArm: "crossBombTimer",
             leftArm: null,
             dropItems: {
-            	crossBombTimer: 1,
+                crossBombTimer: 1,
                 aidBox: 5
             }
         }
@@ -150,7 +150,7 @@ var enemyData = [
             rightArm: "crossGrenade",
             leftArm: "bronzeShield",
             dropItems: {
-            	crossBombTimer: 3,
+                crossBombTimer: 3,
                 aidBox: 5
             }
         }
@@ -193,7 +193,7 @@ var enemyData = [
             rightArm: "handAxe",
             leftArm: "bronzeShield",
             dropItems: {
-            	crossBombTimer: 5,
+                crossBombTimer: 5,
                 bronzeShield: 3,
                 aidBox: 5
             }
@@ -205,10 +205,10 @@ var enemyData = [
         HP: 40,
         speed: 10,
         items: {
-        	crossGrenade: "ryuyotou",
+            crossGrenade: "ryuyotou",
             leftArm: "ironShield",
             dropItems: {
-            	crossGrenade: 2,
+                crossGrenade: 2,
                 ironShield: 3,
                 aidBox: 3
             }
@@ -223,7 +223,7 @@ var enemyData = [
             rightArm: "crossGrenade",
             leftArm: null,
             dropItems: {
-            	crossGrenade: 1,
+                crossGrenade: 1,
                 aidBox: 5
             }
         }
@@ -237,7 +237,7 @@ var enemyData = [
             rightArm: "bombTimer",
             leftArm: "redShield",
             dropItems: {
-            	bombTimer: 3,
+                bombTimer: 3,
                 redShield: 1,
                 aidBox: 5
             }
@@ -252,7 +252,7 @@ var enemyData = [
             rightArm: "bombTimer",
             leftArm: "blueShield",
             dropItems: {
-            	bombTimer: 1,
+                bombTimer: 1,
                 blueShield: 2,
                 aidBox: 5
             }
@@ -511,7 +511,7 @@ app.initializeFirst = function () {
             aidBox: 0,
             grenade: 16,
             crossGrenade: 17,
-            crossBombTimer:18,
+            crossBombTimer: 18,
             bombTimer: 18
         }
     });
@@ -747,12 +747,14 @@ app.initializeGameDelegete = function (playData) {
 
     //////
     player.isMouseDown = player.isMouseDoubleDown = false;
-    player.clickDuration = false;
-    player.isMouseClick = player.isMouseDoubleClick = false;
+    player.downTimeout = player.upTimeout = null;
+    player.clickDuration = player.doubleClickDuration = false;
+    player.isMouseClick = player.doubleDownDuration = player.isMouseDoubleClick = false;
     player.isCursor = false;
     player.axisX = 0;
     player.axisY = 0;
 
+    var clickTime = 200;
     var onDrag = function (e) {
         if (typeof event == 'undefined') {
             event = e;
@@ -772,59 +774,70 @@ app.initializeGameDelegete = function (playData) {
     };
 
     player.onMouseDown = function (e) {
-    	onDrag(e);
-    	if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(24, 2)) {
-        //    player.isCursor = true;
+        onDrag(e);
+        if (Math.pow(player.axisX, 2) + Math.pow(player.axisY, 2) < Math.pow(24, 2)) {
+            //    player.isCursor = true;
         }
-    	
+
         player.isMouseClick = player.isMouseDoubleClick = false;
         player.isMouseDown = true;
-        if (player.isMouseClick) {
-            player.clickDuration = false;
+
+        clearTimeout(player.downTimeout);
+        if (player.doubleDownDuration) {
             player.isMouseDoubleDown = true;
-            setTimeout(function () {
-                player.isMouseDoubleDown = false;
-            }, 200);
+            player.doubleClickDuration = true;
+            player.downTimeout = setTimeout(function () {
+                player.doubleClickDuration = false;
+            }, clickTime);
         } else {
             player.clickDuration = true;
-            setTimeout(function () {
+            player.downTimeout = setTimeout(function () {
                 player.clickDuration = false;
-            }, 200);
+            }, clickTime);
         }
+        player.doubleDownDuration = false;
     };
     player.onMouseMove = function (e) {
         onDrag(e);
     };
     player.onMouseUp = function (e) {
         player.isCursor = false;
-        if (player.isMouseDoubleDown) {
-            player.isMouseClick = false;
+        clearTimeout(player.upTimeout);
+        if (player.doubleClickDuration) {
             player.isMouseDoubleClick = true;
-            setTimeout(function () {
+            player.isMouseClick = true;
+            player.upTimeout = setTimeout(function () {
                 player.isMouseDoubleClick = false;
-            }, 200);
+                player.isMouseClick = false;
+            }, clickTime);
         } else if (player.clickDuration) {
             player.isMouseClick = true;
-            setTimeout(function () {
+            player.doubleDownDuration = true;
+            player.upTimeout = setTimeout(function () {
                 player.isMouseClick = false;
-            }, 200);
+                player.doubleDownDuration = false;
+            }, clickTime);
         } else {
             player.axisX = player.axisY = 0
         }
+        player.clickDuration = player.doubleClickDuration = false;
         player.vX = player.vY = 0;
         player.isMouseDown = player.isMouseDoubleDown = false;
     };
 
-    app.canvas.addEventListener('mousedown', player.onMouseDown);
-    app.canvas.addEventListener('touchstart', player.onMouseDown);
+    if (document.hasOwnProperty("ontouchstart")
+        && (navigator.userAgent.indexOf("Firefox") < 0)) {
+        app.canvas.addEventListener('touchstart', player.onMouseDown);
+        app.canvas.addEventListener('touchmove', player.onMouseMove);
+        app.canvas.addEventListener('touchend', player.onMouseUp);
+        app.canvas.addEventListener('touchleave', player.onMouseUp);
+    } else {
+        app.canvas.addEventListener('mousedown', player.onMouseDown);
+        app.canvas.addEventListener('mousemove', player.onMouseMove);
+        app.canvas.addEventListener('mouseup', player.onMouseUp);
+        app.canvas.addEventListener('mouseleave', player.onMouseUp);
+    }
 
-    app.canvas.addEventListener('mousemove', player.onMouseMove);
-    app.canvas.addEventListener('touchmove', player.onMouseMove);
-
-    app.canvas.addEventListener('mouseup', player.onMouseUp);
-    app.canvas.addEventListener('touchend', player.onMouseUp);
-    app.canvas.addEventListener('mouseleave', player.onMouseUp);
-    app.canvas.addEventListener('touchleave', player.onMouseUp);
 
     app.hideLoading();
     app.initializing = false;
