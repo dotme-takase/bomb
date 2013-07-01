@@ -1436,7 +1436,7 @@ var AppUtils = exports.AppUtils = {
                 _this.direction = (Math.atan2(_this.axisY, _this.axisX) * 180 / Math.PI);
             }
 
-            if (_this.isCursor) {
+            if (_this.isMouseDoubleDown && !_this.isMouseClick) {
                 _this.isWalk = false;
                 if (_this.isAction) {
                     if (_this.action == CharacterAction.DEFENCE) {
@@ -1453,7 +1453,7 @@ var AppUtils = exports.AppUtils = {
                     	_this.defenceCount = 0;
                     }
                 }
-            } else if (_this.isMouseDown) {
+            } else if (_this.isMouseDown && !_this.isMouseClick) {
             	_this.isWalk = true;
                 _this.isAction = false;
             } else {
