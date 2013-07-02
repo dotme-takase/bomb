@@ -389,7 +389,7 @@ p.updateFrame = function () {
                 	} else if(_this.hasOwnProperty('target')) {
                 		_this.prepareThrowWeapon(_this.target);
                 	}
-                	
+
                     if (_this.rightArm.range > _this.width * 3) {
                         _this.bodyAnim.gotoAndPlay("attack__1");
                     } else if (_this.rightArm.range > _this.width * 2) {

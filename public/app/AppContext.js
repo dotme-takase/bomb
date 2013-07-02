@@ -119,7 +119,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
         _this.playData = {
             id: null,
             floorNumber: 1,
-            rightArm: "crossBombTimer",
+            rightArm: "bombTimer",
             leftArm: "woodenShield"
         };
     }
@@ -544,7 +544,7 @@ var AppContext = exports.AppContext = function (contextView, contextViewUI, play
                     var damagedStateId = new Array();
                     var range2d = obj.range2d.split('x');
                     if (range2d.length == 2) {
-                        var bStep1 = _this.tileSize / 2;
+                        var bStep1 = _this.tileSize / 4;
                         for (var b2 = 1; b2 <= range2d[1]; b2++) {
                             for (var b1 = 0; b1 <= range2d[0]; b1 += bStep1) {
                                 var bAngle = ((Math.PI * 2 * b2) / range2d[1]);
@@ -1438,7 +1438,7 @@ var AppUtils = exports.AppUtils = {
 
             if (_this.isMouseDoubleDown && !_this.isMouseClick) {
                 _this.isWalk = false;
-                if (_this.isAction) {
+                if (_this.isAction && _this.action != CharacterAction.ATTACK) {
                     if (_this.action == CharacterAction.DEFENCE) {
                         if (_this.defenceCount > 0) {
                             _this.defenceCount--;
@@ -1458,22 +1458,19 @@ var AppUtils = exports.AppUtils = {
                 _this.isAction = false;
             } else {
                 _this.isWalk = false;
-                if (!_this.isAction && _this.isMouseClick) {
+                if ((!_this.isAction || _this.action == CharacterAction.DEFENCE_MOTION)
+                		&& _this.isMouseClick) {
                     _this.isAction = true;
                     _this.action = CharacterAction.ATTACK;
                 }
 
                 if (_this.isAction) {
-                    var axisTarget = {
-                        x: _this.axisX + _this.x,
-                        y: _this.axisY + _this.y
-                    }
                     if (_this.action == CharacterAction.ATTACK) {
                     } else if ((_this.action == CharacterAction.DEFENCE)
                         && (_this.defenceCount > 0)) {
                         _this.action = CharacterAction.ATTACK;
                     } else if (_this.action == CharacterAction.DEFENCE_MOTION) {
-                        _this.action = CharacterAction.ATTACK;                        
+                        _this.action = CharacterAction.ATTACK;
                     } else {
                         _this.isAction = false;
                         _this.action = CharacterAction.NONE;

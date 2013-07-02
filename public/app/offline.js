@@ -306,26 +306,26 @@ var itemData = {
     },
     woodenShield: {
         type: BitmapItem.TYPE_SHIELD,
-        HP: 10,
+        HP: 30,
         bonusPoint: 4
     },
     bronzeShield: {
         type: BitmapItem.TYPE_SHIELD,
-        HP: 40,
+        HP: 60,
         bonusPoint: 5
     },
     ironShield: {
         type: BitmapItem.TYPE_SHIELD,
-        HP: 80,
+        HP: 120,
         bonusPoint: 6
     },
     blueShield: {
         type: BitmapItem.TYPE_SHIELD,
-        HP: 60,
+        HP: 80,
         bonusPoint: 12
     },
     redShield: {type: BitmapItem.TYPE_SHIELD,
-        HP: 70,
+        HP: 90,
         bonusPoint: 16
     },
     aidBox: {
@@ -340,32 +340,58 @@ var itemData = {
                 aid);
         }
     },
-    crossBombTimer: {
-        type: BitmapItem.TYPE_BOMB_TIMER,
-        range2d: "64x4",
-        bonusPoint: 12,
-        speed: 24,
-        leftTime: 20
-    },
     grenade: {
         type: BitmapItem.TYPE_BOMB,
-        range2d: "32x9",
-        bonusPoint: 16,
+        range2d: "0x1",
+        bonusPoint: 12,
         speed: 24
     },
     crossGrenade: {
         type: BitmapItem.TYPE_BOMB,
-        range2d: "96x4",
-        bonusPoint: 16,
+        range2d: "64x4",
+        bonusPoint: 12,
+        speed: 24
+    },
+    grenade2x: {
+        type: BitmapItem.TYPE_BOMB,
+        range2d: "64x9",
+        bonusPoint: 24,
+        speed: 24
+    },
+    crossGrenade2x: {
+        type: BitmapItem.TYPE_BOMB,
+        range2d: "128x4",
+        bonusPoint: 20,
         speed: 24
     },
     bombTimer: {
         type: BitmapItem.TYPE_BOMB_TIMER,
-        range2d: "96x9",
+        range2d: "32x6",
         bonusPoint: 12,
         speed: 24,
         leftTime: 20
-    }
+    },
+    crossBombTimer: {
+        type: BitmapItem.TYPE_BOMB_TIMER,
+        range2d: "64x4",
+        bonusPoint: 16,
+        speed: 24,
+        leftTime: 20
+    },
+    bombTimer2x: {
+        type: BitmapItem.TYPE_BOMB_TIMER,
+        range2d: "96x9",
+        bonusPoint: 28,
+        speed: 24,
+        leftTime: 20
+    },
+    crossBombTimer2x: {
+        type: BitmapItem.TYPE_BOMB_TIMER,
+        range2d: "160x4",
+        bonusPoint: 24,
+        speed: 24,
+        leftTime: 20
+    },
 };
 
 
@@ -510,10 +536,14 @@ app.initializeFirst = function () {
         frames: {width: 32, height: 32, regX: 16, regY: 16},
         animations: {
             aidBox: 0,
-            grenade: 16,
+            grenade: 17,
             crossGrenade: 17,
+            grenade2x: 17,
+            crossGrenade2x: 17,
+            bombTimer: 18,
+            bombTimer2x: 18,
             crossBombTimer: 18,
-            bombTimer: 18
+            crossBombTimer2x: 18
         }
     });
 
@@ -785,8 +815,8 @@ app.initializeGameDelegete = function (playData) {
 
         clearTimeout(player.downTimeout);
         if (player.doubleDownDuration) {
-            player.isMouseDoubleDown = true;
-            player.doubleClickDuration = true;
+        	player.isMouseDoubleDown = player.isMouseDown;
+        	player.doubleClickDuration = true;
             player.downTimeout = setTimeout(function () {
                 player.doubleClickDuration = false;
             }, clickTime);
@@ -839,7 +869,7 @@ app.initializeGameDelegete = function (playData) {
             app.canvas.addEventListener('mouseleave', onMouseUp, false);
         }
     	app.isEventListen = true;
-    } 
+    }
 
     app.hideLoading();
     app.initializing = false;
